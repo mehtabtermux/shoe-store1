@@ -1,0 +1,99 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+<title>Shoe Store</title>
+<style>
+body {font-family: Arial;}
+.card {border:1px solid #ccc; padding:10px; margin:10px;}
+</style>
+</head>
+<body>
+
+<h1>Step Up Your Style</h1>
+
+<h2>Products</h2>
+<div id="products"></div>
+
+<h2>Admin Panel</h2>
+<input id="user" placeholder="username"><br>
+<input id="pass" placeholder="password" type="password"><br>
+<button onclick="login()">Login</button>
+
+<div id="admin" style="display:none;">
+  <h3>Add Product</h3>
+  <input id="name" placeholder="name"><br>
+  <input id="price" placeholder="price"><br>
+  <button onclick="addProduct()">Add</button>
+
+  <h3>Orders</h3>
+  <button onclick="loadOrders()">View Orders</button>
+  <div id="orders"></div>
+</div>
+
+<script>
+async function loadProducts(){
+  let res = await fetch('http://localhost:5000/products');
+  let data = await res.json();
+  const div = document.getElementById('products');
+  div.innerHTML = '';
+  data.forEach(p=>{
+    div.innerHTML += `<div class='card'>
+      <h3>${p.name}</h3>
+      <p>₹${p.price}</p>
+      <button onclick="order('${p.name}')">Buy</button>
+    </div>`;
+  });
+}
+
+async function order(name){
+  await fetch('http://localhost:5000/order',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({product:name})
+  });
+  alert('Order placed');
+}
+
+async function login(){
+  let res = await fetch('http://localhost:5000/login',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({
+      username: document.getElementById('user').value,
+      password: document.getElementById('pass').value
+    })
+  });
+  let data = await res.json();
+  if(data.success){
+    document.getElementById('admin').style.display='block';
+    alert('Login success');
+  } else {
+    alert('Wrong login');
+  }
+}
+
+async function addProduct(){
+  await fetch('http://localhost:5000/products',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({
+      name: document.getElementById('name').value,
+      price: document.getElementById('price').value
+    })
+  });
+  loadProducts();
+}
+
+async function loadOrders(){
+  let res = await fetch('http://localhost:5000/orders');
+  let data = await res.json();
+  const div = document.getElementById('orders');
+  div.innerHTML = JSON.stringify(data);
+}
+
+loadProducts();
+</script>
+
+</body>
+</html>
